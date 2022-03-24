@@ -6,9 +6,9 @@ this library provides an easy-to-use interface for anisotropic, adaptive Smolyak
 
 ## the grid
 
-the central object of this library is the `SmolyakGrid`, which has four fundamental attributes that are all set upon initiation:
+the central object of this library is the `SmolyakGrid`, which has four fundamental attributes that are all set upon initialization:
 1. `dims`: the number of dimensions the grid lives in.
-2. `mu`: the fineness of the grid. each dimension can possess a different level of coarseness/fineness (hence the descriptor 'anisotropid'), in which case `mu` should be array-like with length `dims`.
+2. `mu`: the fineness of the grid. each dimension can possess a different level of coarseness/fineness (hence the descriptor 'anisotropic'), in which case `mu` should be array-like with length `dims`.
 3. `lower`: the lower bound of the approximation domain.
 4. `upper`: the upper bound of the approximation domain.
 
