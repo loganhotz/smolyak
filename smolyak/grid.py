@@ -71,9 +71,16 @@ class SmolyakGrid(np.ndarray):
     Methods
     -------
     cache_function
-
+        save the interpolation weights for a function
+    weights
+        calculate and return the interpolation weights for a function. they are not
+        cached when this method is used
     domain_map
+        take a collection of points in the hypercube [-1, 1]^dims and map them into
+        the domain specified by [self.lower, self.upper]
     cube_map
+        translate the given 'points' in the space [self.lower, self.upper] into the
+        hypercube [-1, 1]^dims
     """
 
     def __new__(
@@ -115,6 +122,7 @@ class SmolyakGrid(np.ndarray):
 
         # dictionary to store instance-specific weights of interpolated function
         self.__cached_functions__ = {}
+        self.__last_cached__ = ''
 
     @cached_property
     def poly(self):
@@ -189,6 +197,41 @@ class SmolyakGrid(np.ndarray):
         -------
         None
         """
+        weights = self.weights(func, *args, **kwargs)
+
+        if not key:
+            key = hash(func)
+        self.__last_cached__ = key
+
+        L, U = self.decomp
+        self.__cached_functions__[key] = la.solve(U, la.solve(L, weights))
+
+    def weights(
+        self,
+        func,
+        *args, **kwargs
+    ):
+        """
+        evaluate a function at the Smolyak grid points without saving the interpolation
+        weights. checks are made to ensure the output is conformable with the system of
+        this SmolyakGrid
+
+        Parameters
+        ----------
+        func : function
+            the to-be-interpolated function. it must accept the SmolyakGrid's hypercube
+            points as its first argument, and return a vector equal to the number of
+            rows in the Smolyak system. in its simplest implementation, the function
+            can be thought to map each point (a row) to a scalar value. optional
+            positional and keyword args are accepted
+        args, kwargs : positional and keyword args
+            arguments to pass toward `func` at evaluation
+
+        Returns
+        -------
+        weights : np.ndarray
+            interpolation weights of the given function
+        """
         weights = np.asarray(func(self.__array__(), *args, **kwargs)).squeeze()
         n_dims = len(weights.shape)
 
@@ -204,12 +247,7 @@ class SmolyakGrid(np.ndarray):
                 f"return one of length {len(self.__system__)}"
             )
 
-        if not key:
-            key = hash(func)
-        self.__last_hash__ = key
-
-        L, U = self.decomp
-        self.__cached_functions__[key] = la.solve(U, la.solve(L, weights))
+        return weights
 
     def domain_map(self, points: ndarray):
         """
@@ -277,13 +315,40 @@ class SmolyakGrid(np.ndarray):
         ]
         return '\n'.join(string)
 
-    def __call__(self, arg, *, func=None, key='', **kwargs):
+    def __call__(
+        self,
+        arg,
+        *args,
+        func: Callable = None,
+        key: Hashable = '',
+        cache: bool = True,
+        **kwargs
+    ):
         _arg = np.atleast_2d(self.cube_map(arg))
 
-        if func:
-            self.cache_function(func, key=key)
+        if not key and not func:
+            try:
+                weights = self.__cached_functions__[self.__last_cached__]
+            except KeyError:
+                raise RuntimeError(
+                    "no function was cached prior to calling this SmolyakGrid"
+                ) from None
 
-        weights = self.__cached_functions__[self.__last_hash__]
+        elif func:
+            if cache:
+                self.cache_function(func, key, *args, **kwargs)
+                weights = self.__cached_functions__[self.__last_cached__]
+
+            else:
+                weights = self.weights(func, *args, **kwargs)
+
+        else:
+            try:
+                weights = self.__cached_functions__[key]
+            except KeyError:
+                raise KeyError(
+                    f"{repr(key)} was not used previously to cache a function"
+                ) from None
 
         _approx_system = _construct_smolyak_system(
             dims=self.dims,
