@@ -73,6 +73,62 @@ obviously, as both dimensions increase (comparing `sg1` and `sg2`), the approxim
 
 
 
+### the grid as numpy array
+
+this implementation of Smolyak grids inherits from numpy's `ndarray`, meaning that all of the `ufunc`s in numpy will operate on our `SmolyakGrid`s as they would over a normal array. for example,
+
+```python
+import smolyak as sk
+import numpy as np
+
+>>> sg = sk.SmolyakGrid(mu=1)
+SmolyakGrid(
+    [[ 0  0]
+     [ 0 -1]
+     [ 0  1]
+     [-1  0]
+     [ 1  0]]
+dims=2, mu=1)
+
+>>> np.cos(sg)
+SmolyakGrid(
+    [[1.     1.    ]
+     [1.     0.5403]
+     [1.     0.5403]
+     [0.5403 1.    ]
+     [0.5403 1.    ]]
+dims=2, mu=1)
+
+>>> sg = sk.SmolyakGrid(dims=4, mu=1)
+SmolyakGrid(
+    [[ 0  0  0  0]
+     [ 0  0  0 -1]
+     [ 0  0  0  1]
+     [ 0  0 -1  0]
+     [ 0  0  1  0]
+     [ 0 -1  0  0]
+     [ 0  1  0  0]
+     [-1  0  0  0]
+     [ 1  0  0  0]]
+dims=4, mu=1)
+
+>>> np.degrees(sg)
+SmolyakGrid(
+    [[  0.        0.        0.        0.     ]
+     [  0.        0.        0.      -57.29578]
+     [  0.        0.        0.       57.29578]
+     [  0.        0.      -57.29578   0.     ]
+     [  0.        0.       57.29578   0.     ]
+     [  0.      -57.29578   0.        0.     ]
+     [  0.       57.29578   0.        0.     ]
+     [-57.29578   0.        0.        0.     ]
+     [ 57.29578   0.        0.        0.     ]]
+dims=4, mu=1)
+```
+treating the `SmolyakGrid`'s hypercube points in this way is not addressed in JMMV (2013), but it seemed the most natural way to place the grid within the context of the numpy environment, as opposed to, say, treating the Smolyak indices as the fundamental array of the `SmolyakGrid`.
+
+
+
 ## the decorators
 a decorator is also included in the library, that allows for the decorated function to accept a `SmolyakGrid` as its first argument, and which automatically caches the function's interpolation weights.
 
