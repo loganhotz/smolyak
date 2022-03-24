@@ -35,7 +35,7 @@ sg_coarse(arr, func=rosenbrock, key='rosen') # [25.49 2.81 117.9701 71.5501 ]
 sg_fine(arr, func=rosenbrock, key='rosen')   # [ 2.45 1.62 136.2101 49.36604]
 rosenbrock(arr)                              # [ 2.45 1.62 136.2101 49.36604]
 ```
-we see that by incrementing the level of approximation by 1, we get values that are much closer to the truth; matching them to at least five decimal points.
+we see that by incrementing the level of approximation just by 1, we get values that are much closer to the truth; matching them to at least five decimal points.
 
 above, we called each instance of `SmolyakGrid`, passing in an array of points within the 2-dimensional hypercube as the first argument, as well as the objective function and a so-called `key`. each instance of the `SmolyakGrid` class has its own function cache that stores the interpolation weights for every function that is interpolated over said grid (the functions are identified by the optional `key` parameter). two equivalent ways of the calling method used above are:
 
@@ -70,3 +70,28 @@ sg5(arr, func=bukin) # [62.78283 31.46978 62.41357 91.60915]
 bukin(arr)           # [63.27736 31.73958 62.55601 91.75156]
 ```
 obviously, as both dimensions increase (comparing `sg1` and `sg2`), the approximations become better; and even if only one dimension's grid becomes finer (`sg1` vs. `sg3`, or `sg2` vs. `sg4`), they do the same. by comparing `sg3` and `sg5`, it seems that for the portions of the [-1, 1] x [-1, 1] square we consider in `arr`, the second dimension is much more important for attaining close approximations.
+
+
+
+## the decorators
+a decorator is also included in the library, that allows for the decorated function to accept a `SmolyakGrid` as its first argument, and which automatically caches the function's interpolation weights.
+
+```python
+import smolyak as sk
+import numpy as np
+
+def mccormick(arr):
+    x, y = arr[:, 0], arr[:, 1]
+    return np.sin(x + y) + np.square(x - y) - 1.5*x + 2.5*y + 1
+
+@sk.gridwise
+def gw_mccormick(arr):
+    return mccormick(arr)
+
+sg = sk.SmolyakGrid()
+sg_dec = gw_mccormick(sk.SmolyakGrid())
+
+sg(arr, func=parabola) # [2.21063 0.64    4.87913 4.52614]
+sg_dec(arr)            # [2.21063 0.64    4.87913 4.52614]
+mccormick(arr)         # [2.20422 0.64    4.86074 4.52518]
+```

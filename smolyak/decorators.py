@@ -8,9 +8,11 @@ from functools import wraps
 
 
 def gridwise(
-    func: Callable, *,
+    func: Callable,
+    *args,
     grid: SmolyakGrid = None,
-    key: Hashable = ''
+    key: Hashable = '',
+    **kwargs
 ):
     """
     decorator for functions to interplate over an optionally-provided SmolyakGrid
@@ -36,7 +38,7 @@ def gridwise(
 
     @wraps(func)
     def evaluator(grid):
-        grid.cache_function(func, key=key)
+        grid.cache_function(func, key=key, *args, **kwargs)
         return grid
 
 
