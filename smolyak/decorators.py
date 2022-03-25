@@ -9,9 +9,9 @@ from functools import wraps
 
 def gridwise(
     func: Callable,
-    *args,
     grid: SmolyakGrid = None,
     key: Hashable = '',
+    *args,
     **kwargs
 ):
     """

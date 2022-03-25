@@ -318,13 +318,13 @@ class SmolyakGrid(np.ndarray):
     def __call__(
         self,
         arg,
-        *args,
         func: Callable = None,
         key: Hashable = '',
         cache: bool = True,
+        *args,
         **kwargs
     ):
-        _arg = np.atleast_2d(self.cube_map(arg))
+        _arg = np.atleast_2d(arg)
 
         if not key and not func:
             try:
